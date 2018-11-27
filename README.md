@@ -5,7 +5,7 @@ Plugin for integrate data over sound framework [Chirp.io](https://chirp.io/) int
 ## Setup
 For setup plugin you will need to
 
-- Import `UnityChirpIOPlugin.unitypackage` into your Unity project.
+- Import `UnityChirpIOPlugin.unitypackage`[download](https://github.com/AlexanderKub/unity-chirp-plugin/releases/download/0.0.1/UnityChirpIOPlugin.unitypackage) into your Unity project.
 - Sign up at [developers.chirp.io](https://developers.chirp.io) and download the latest Android and iOS SDK from downloads.
 - Copy the `chirp-connect-release.aar` file into the `ChirpIO/Plugins/Android` folder of the Unity project.
 - Copy the `ChirpConnect.framework` file into the `ChirpIO/Plugins/iOS` folder of the Unity project.
