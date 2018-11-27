@@ -1,6 +1,6 @@
 # Chirp Unity Plugin
 
-Plugin for integrate data over sound framework [Chirp.io](https://chirp.io/) into Unity project. Support iOS and Android projects. For more information see [Chirp documentation](https://developers.chirp.io/docs).
+Plugin for integrate data over sound framework [Chirp.io](https://chirp.io/) into Unity project. Support iOS and Android projects. For more information see [Chirp documentation](https://developers.chirp.io/docs).
 
 ## Setup
 For setup plugin you will need to
