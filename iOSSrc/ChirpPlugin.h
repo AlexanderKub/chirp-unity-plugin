@@ -5,8 +5,8 @@
 @property (nonatomic) ChirpConnect *connect;
 
 + (instancetype) sharedChirpPlugin;
-- (void)InitSDKWithKey:(NSString *)key andSecret: (NSString *)secret andConfig: (NSString *)config;
-- (void)StartSDK;
-- (void)StopSDK;
-- (void)SendData:(NSData *) payload;
+- (NSError *)InitSDKWithKey:(NSString *)key andSecret: (NSString *)secret andConfig: (NSString *)config;
+- (NSError *)StartSDK;
+- (NSError *)StopSDK;
+- (NSError *)SendData:(NSData *) payload;
 @end

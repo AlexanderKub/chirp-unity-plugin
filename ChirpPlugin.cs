@@ -3,30 +3,88 @@ using System;
 using System.Runtime.InteropServices;
 
 public enum ChirpStateEnum {
-    NotInitialised,     
-    Stopped,     
-    Paused,   
+    NotInitialised,
+    Stopped,
+    Paused,
     Running,
     Sending,
     Receiving,
 }
 
-public class ChirpPlugin : MonoBehaviour {
+public enum ChirpErrorsEnum {
+    CHIRP_CONNECT_OK = 0,
+    CHIRP_CONNECT_OUT_OF_MEMORY,
+    CHIRP_CONNECT_NOT_INITIALISED,
 
+    CHIRP_CONNECT_NOT_STARTED = 10,
+    CHIRP_CONNECT_NOT_STOPPED,
+    CHIRP_CONNECT_NOT_RUNNING,
+    CHIRP_CONNECT_ALREADY_RUNNING,
+    CHIRP_CONNECT_ALREADY_STOPPED,
+
+    CHIRP_CONNECT_INVALID_SAMPLE_RATE = 20,
+    CHIRP_CONNECT_NULL_BUFFER,
+    CHIRP_CONNECT_NULL_POINTER,
+    CHIRP_CONNECT_INVALID_LENGTH,
+    CHIRP_CONNECT_INVALID_CHANNEL,
+    CHIRP_CONNECT_INVALID_FREQUENCY_CORRECTION,
+
+    CHIRP_CONNECT_INVALID_KEY = 40,
+    CHIRP_CONNECT_INVALID_SECRET,
+    CHIRP_CONNECT_INVALID_CREDENTIALS,
+    CHIRP_CONNECT_MISSING_SIGNATURE,
+    CHIRP_CONNECT_INVALID_SIGNATURE,
+    CHIRP_CONNECT_MISSING_CONFIG,
+    CHIRP_CONNECT_INVALID_CONFIG,
+    CHIRP_CONNECT_EXPIRED_CONFIG,
+    CHIRP_CONNECT_INVALID_VERSION,
+    CHIRP_CONNECT_INVALID_PROJECT,
+    /*--------------------------------------------------------------------------
+     * CHIRP_CONNECT_INVALID_CONFIG_CHARACTER needs to be kept at the end of
+     * the credentials error code list as it deals with base64 but it is
+     * implemented in chirp-connect.
+     *------------------------------------------------------------------------*/
+    CHIRP_CONNECT_INVALID_CONFIG_CHARACTER,
+
+    CHIRP_CONNECT_PAYLOAD_EMPTY_MESSAGE = 80,
+    CHIRP_CONNECT_PAYLOAD_NO_ALPHABET,
+    CHIRP_CONNECT_PAYLOAD_INVALID_MESSAGE,
+    CHIRP_CONNECT_PAYLOAD_INVALID_MESSAGE_LENGTH,
+    CHIRP_CONNECT_PAYLOAD_INVALID_ENCODED_LENGTH,
+    CHIRP_CONNECT_PAYLOAD_UNKNOWN_SYMBOLS,
+    CHIRP_CONNECT_PAYLOAD_DECODE_FAILED,
+    CHIRP_CONNECT_PAYLOAD_TOO_LONG,
+
+    CHIRP_CONNECT_INVALID_VOLUME = 99,
+    CHIRP_CONNECT_UNKNOWN_ERROR = 100,
+
+    CHIRP_CONNECT_NETWORK_ERROR = 105,
+    CHIRP_CONNECT_NETWORK_NO_NETWORK,
+    CHIRP_CONNECT_NETWORK_PERMISSIONS_NOT_GRANTED,
+
+    CHIRP_CONNECT_ACCOUNT_DISABLED = 110,
+
+    CHIRP_CONNECT_AUDIO_IO = 120,
+
+    CHIRP_PLUGIN_NOT_INIT = 404,
+}
+
+public class ChirpPlugin : MonoBehaviour {
     #region iOS Plugin Import
 
-    private delegate void MonoPStateChangeDelegate(ChirpStateEnum state);
-    private delegate void MonoPDataDelegate(string data);
+    delegate void MonoPStateChangeDelegate(ChirpStateEnum state);
+    delegate void MonoPDataDelegate(string data);
+    private static bool IsPluginInit;
 
     #if UNITY_IOS && !UNITY_EDITOR
     [DllImport("__Internal")]
     private static extern int ChirpInitSDK(string key, string secret, string config);
     [DllImport("__Internal")]
-    private static extern void ChirpStartSDK();
+    private static extern int ChirpStartSDK();
     [DllImport("__Internal")]
-    private static extern void ChirpStopSDK();
+    private static extern int ChirpStopSDK();
     [DllImport("__Internal")]
-    private static extern void ChirpSendData(int length, string payload);
+    private static extern int ChirpSendData(int length, string payload);
     [DllImport("__Internal")]
     private static extern void RegisterPluginHandlers(MonoPStateChangeDelegate state, MonoPDataDelegate recieve ,MonoPDataDelegate sent);
     #endif
@@ -34,6 +92,7 @@ public class ChirpPlugin : MonoBehaviour {
     #endregion
 
     #region Android Plugin Import
+
     #if UNITY_ANDROID && !UNITY_EDITOR
     private static AndroidJavaObject PluginBridge;
     public class ChirpPluginJavaMessageHandler : AndroidJavaProxy {
@@ -52,6 +111,7 @@ public class ChirpPlugin : MonoBehaviour {
         }
     }
     #endif
+
     #endregion
 
     #region Chirp SDK API
@@ -62,39 +122,71 @@ public class ChirpPlugin : MonoBehaviour {
     public static Action<string> OnSentDataEvent;
 
     public static void InitSDK(string key, string secret, string config) {
-        #if UNITY_IOS && !UNITY_EDITOR
-        ChirpInitSDK(key, secret, config);
-        #elif UNITY_ANDROID && !UNITY_EDITOR
-        object[] parameters = new object[3];
-        parameters[0] = key;
-        parameters[1] = secret;
-        parameters[2] = config;
-        PluginBridge.Call("ChirpInitSDK", parameters);
+        int errorCode = 0;
+        #if UNITY_EDITOR
+        Debug.Log("ChirpPlugin.InitSDK with\n" + key + "\n" + secret + "\n" + config);
+        #else
+            #if UNITY_IOS
+            errorCode = ChirpInitSDK(key, secret, config);
+            #elif UNITY_ANDROID
+            object[] parameters = new object[3];
+            parameters[0] = key;
+            parameters[1] = secret;
+            parameters[2] = config;
+            PluginBridge.Call("ChirpInitSDK", parameters);
+            #endif
         #endif
+        HandleError(errorCode);
+        IsPluginInit = true;
     }
 
     public static void StartSDK() {
-        #if UNITY_IOS && !UNITY_EDITOR
-        ChirpStartSDK();
-        #elif UNITY_ANDROID && !UNITY_EDITOR
-        PluginBridge.Call("ChirpStartSDK");
+        int errorCode = 0;
+        #if UNITY_EDITOR
+        Debug.Log("ChirpPlugin.StartSDK");
+        #else
+            #if UNITY_IOS
+            errorCode = ChirpStartSDK();
+            #elif UNITY_ANDROID
+            errorCode = PluginBridge.Call<int>("ChirpStartSDK");
+            #endif
         #endif
+        HandleError(errorCode);
     }
 
     public static void StopSDK() {
-        #if UNITY_IOS && !UNITY_EDITOR
-        ChirpStopSDK();
-        #elif UNITY_ANDROID && !UNITY_EDITOR
-        PluginBridge.Call("ChirpStopSDK");
+        if (!IsPluginInit) {
+            return;
+        }
+        int errorCode = 0;
+        #if UNITY_EDITOR
+        Debug.Log("ChirpPlugin.StopSDK");
+        #else
+            #if UNITY_IOS
+            errorCode = ChirpStopSDK();
+            #elif UNITY_ANDROID
+            errorCode = PluginBridge.Call<int>("ChirpStopSDK");
+            #endif
         #endif
+        HandleError(errorCode);
     }
 
     public static void SendData(string payload) {
-        #if UNITY_IOS && !UNITY_EDITOR
-        ChirpSendData(payload.Length, payload);
-        #elif UNITY_ANDROID && !UNITY_EDITOR
-        PluginBridge.Call("ChirpSendData", payload.Length, payload);
+        if (string.IsNullOrEmpty(payload)) {
+            Debug.Log("ChirpPlugin.SendData Error: NullOrEmpty payload");
+            return;
+        }
+        int errorCode = 0;
+        #if UNITY_EDITOR
+        Debug.Log("ChirpPlugin.SendData: " + payload);
+        #else
+            #if UNITY_IOS
+            errorCode = ChirpSendData(payload.Length, payload);
+            #elif UNITY_ANDROID
+            errorCode = PluginBridge.Call<int>("ChirpSendData", payload.Length, payload);
+            #endif
         #endif
+        HandleError(errorCode);
     }
 
     #endregion
@@ -127,17 +219,21 @@ public class ChirpPlugin : MonoBehaviour {
 
     [RuntimeInitializeOnLoadMethod]
     private static void Initialize() {
-        #if UNITY_IOS && !UNITY_EDITOR
-        RegisterPluginHandlers(OnChangeState, OnReceiveData, OnSentData);
-        #elif UNITY_ANDROID && !UNITY_EDITOR
-        AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer"); 
-        AndroidJavaObject unityActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
+        #if UNITY_EDITOR
+        Debug.Log("ChirpPlugin.Initialize");
+        #else
+            #if UNITY_IOS
+            RegisterPluginHandlers(OnChangeState, OnReceiveData, OnSentData);
+            #elif UNITY_ANDROID
+            AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+            AndroidJavaObject unityActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
 
-        PluginBridge = new AndroidJavaObject("com.alexanderkub.plugins.unitychirpio.Bridge");
-        object[] parameters = new object[2];
-        parameters[0] = unityActivity;
-        parameters[1] = new ChirpPluginJavaMessageHandler();
-        PluginBridge.Call("registerPluginHandlers", parameters);
+            PluginBridge = new AndroidJavaObject("com.alexanderkub.plugins.unitychirpio.Bridge");
+            object[] parameters = new object[2];
+            parameters[0] = unityActivity;
+            parameters[1] = new ChirpPluginJavaMessageHandler();
+            PluginBridge.Call("registerPluginHandlers", parameters);
+            #endif
         #endif
     }
 
@@ -152,5 +248,21 @@ public class ChirpPlugin : MonoBehaviour {
             stringValue += Char.ConvertFromUtf32(hexValue);
         }
         return stringValue;
+    }
+
+    private static void HandleError(int errorCode) {
+        if (errorCode == 0) {
+            return;
+        }
+        string errorString;
+        if (Enum.IsDefined(typeof(ChirpErrorsEnum), errorCode)) {
+            ChirpErrorsEnum error = (ChirpErrorsEnum)errorCode;
+            errorString = "ChirpPlugin error(" + errorCode + "): " + error.ToString();
+            Debug.LogError(errorString);
+            throw new Exception(errorString);
+        }
+        errorString = "ChirpPlugin error(" + errorCode + "): CHIRP_PLUGIN_UNKNOW_ERROR";
+        Debug.LogError(errorString);
+        throw new Exception(errorString);
     }
 }

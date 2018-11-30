@@ -22,16 +22,16 @@ public final class Bridge {
         this.connector.InitSDK(key, secret, config);
     }
 
-    public void ChirpStartSDK() {
-        this.connector.StartSDK();
+    public int ChirpStartSDK() {
+        return this.connector.StartSDK();
     }
 
-    public void ChirpStopSDK() {
-        this.connector.StopSDK();
+    public int ChirpStopSDK() {
+        return this.connector.StopSDK();
     }
 
-    public void ChirpSendData(int length, String payload) {
-        this.connector.sendPayload(length, payload);
+    public int ChirpSendData(int length, String payload) {
+        return this.connector.sendPayload(length, payload);
     }
 
     private static void runOnUnityThread(Runnable runnable) {

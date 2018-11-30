@@ -35,7 +35,7 @@ public class ChirpConnector {
                 if (data != null) {
                     hexData = chirpConnect.payloadToHexString(data);
                 }
-                Log.v("connectdemoapp", "ConnectCallback: onSending: " + hexData + " on channel: " + channel);
+                //Log.v("connectdemoapp", "ConnectCallback: onSending: " + hexData + " on channel: " + channel);
             }
 
             @Override
@@ -49,7 +49,7 @@ public class ChirpConnector {
                     hexData = chirpConnect.payloadToHexString(data);
                 }
                 Bridge.SendSentEventToUnity(hexData);
-                Log.v("connectdemoapp", "ConnectCallback: onSent: " + hexData + " on channel: " + channel);
+                //Log.v("connectdemoapp", "ConnectCallback: onSent: " + hexData + " on channel: " + channel);
             }
 
             @Override
@@ -58,7 +58,7 @@ public class ChirpConnector {
                  * onReceiving is called when a receive event begins.
                  * No data has yet been received.
                  */
-                Log.v("connectdemoapp", "ConnectCallback: onReceiving on channel: " + channel);
+                //Log.v("connectdemoapp", "ConnectCallback: onReceiving on channel: " + channel);
             }
 
             @Override
@@ -73,7 +73,7 @@ public class ChirpConnector {
                     hexData = chirpConnect.payloadToHexString(data);
                 }
                 Bridge.SendReceiveEventToUnity(hexData);
-                Log.v("connectdemoapp", "ConnectCallback: onReceived: " + hexData + " on channel: " + channel);
+                //Log.v("connectdemoapp", "ConnectCallback: onReceived: " + hexData + " on channel: " + channel);
             }
 
             @Override
@@ -82,7 +82,7 @@ public class ChirpConnector {
                  * onStateChanged is called when the SDK changes state.
                  */
                 ConnectState state = ConnectState.createConnectState(newState);
-                Log.v("connectdemoapp", "ConnectCallback: onStateChanged " + oldState + " -> " + newState);
+                //Log.v("connectdemoapp", "ConnectCallback: onStateChanged " + oldState + " -> " + newState);
                 Bridge.SendChangeStateEventToUnity(newState);
             }
 
@@ -91,7 +91,7 @@ public class ChirpConnector {
                 /**
                  * onSystemVolumeChanged is called when the system volume is changed.
                  */
-                Log.v("connectdemoapp", "System volume has been changed, notify user to increase the volume when sending data");
+                //Log.v("connectdemoapp", "System volume has been changed, notify user to increase the volume when sending data");
             }
 
         };
@@ -111,22 +111,32 @@ public class ChirpConnector {
         });
     }
 
-    public void StartSDK() {
+    public int StartSDK() {
         if (this.chirpConnect == null) {
-            return;
+            return 404;
         }
-        this.chirpConnect.start();
+        ChirpError error = this.chirpConnect.start();
+        int errorCode = error.getCode();
+        if (errorCode > 0) {
+            return errorCode;
+        }
+        return 0;
     }
 
-    public void StopSDK() {
+    public int StopSDK() {
         if (this.chirpConnect == null) {
-            return;
+            return 404;
         }
-        this.chirpConnect.stop();
+        ChirpError error = this.chirpConnect.stop();
+        int errorCode = error.getCode();
+        if (errorCode > 0) {
+            return errorCode;
+        }
+        return 0;
     }
 
 
-    protected void sendPayload(int length, String message) {
+    protected int sendPayload(int length, String message) {
         /**
          * A payload is a byte array dynamic size with a maximum size defined by the config string.
          *
@@ -135,12 +145,13 @@ public class ChirpConnector {
 
         long maxSize = chirpConnect.getMaxPayloadLength();
         if (maxSize < payload.length) {
-            Log.e("ConnectError: ", "Invalid Payload");
-            return;
+            return 83;
         }
         ChirpError error = chirpConnect.send(payload);
-        if (error.getCode() > 0) {
-            Log.e("ConnectError: ", error.getMessage());
+        int errorCode = error.getCode();
+        if (errorCode > 0) {
+            return errorCode;
         }
+        return 0;
     }
 }
