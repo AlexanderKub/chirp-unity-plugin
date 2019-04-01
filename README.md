@@ -5,7 +5,7 @@ Plugin for integrate data over sound SDK [Chirp.io](https://chirp.io/) into Unit
 ## Setup
 For setup plugin you will need to
 
-- Import `UnityChirpIOPlugin.unitypackage`([download](https://github.com/AlexanderKub/chirp-unity-plugin/releases/download/0.0.2/UnityChirpIOPlugin.unitypackage)) into your Unity project.
+- Import `UnityChirpIOPlugin.unitypackage`([download](https://github.com/AlexanderKub/chirp-unity-plugin/releases/download/v0.0.3/UnityChirpIOPlugin.unitypackage)) into your Unity project.
 - Sign up at [developers.chirp.io](https://developers.chirp.io) and download the latest Android and iOS SDK from downloads.
 - Copy the `chirpsdk-release.aar` file into the `ChirpIO/Plugins/Android` folder of the Unity project.
 - Copy the `ChirpConnect.framework` file into the `ChirpIO/Plugins/iOS` folder of the Unity project.
@@ -15,6 +15,7 @@ For setup plugin you will need to
 For Android build you will need to
 
 - Set `Minimum API Level` to level 19 or higher
+
 For iOS build you will need to
 
 - Go `Edit\Project Settings\Audio` check `Disable Unity Audio`. Cause `Deactivating an audio session that has running I/O` issue.
@@ -78,8 +79,7 @@ Send [Hello world!](https://audio.chirp.io/v3/standard/48656c6c6f20776f726c6421.
 ## Build from sources
 
 Plugin source code for iOS it's just Objective-C++ files in Plugins folder, you don't need to build it.
-Plugin source code for Android it's Gradle project.
-For a correct build you must place `chirpsdk-release.sdk` to `unitychirpio/libs`
-and build `unitychirpio` module by Gradle.
+
+Plugin source code for Android it's Gradle project.For a correct build you must place `chirpsdk-release.sdk` to `unitychirpio/libs` and build `unitychirpio` module by Gradle.
 
 ----
