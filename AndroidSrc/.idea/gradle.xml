@@ -9,7 +9,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/chirp-connect-release" />
+            <option value="$PROJECT_DIR$/chirpsdk-release" />
             <option value="$PROJECT_DIR$/unitychirpio" />
           </set>
         </option>

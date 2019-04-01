@@ -8,7 +8,7 @@ import io.chirp.connect.ChirpConnect;
 import io.chirp.connect.interfaces.ConnectEventListener;
 import io.chirp.connect.interfaces.ConnectSetConfigListener;
 import io.chirp.connect.models.ChirpError;
-import io.chirp.connect.models.ConnectState;
+import io.chirp.connect.models.ChirpConnectState;
 
 public class ChirpConnector {
     private ChirpConnect chirpConnect;
@@ -25,35 +25,36 @@ public class ChirpConnector {
         }
 
         final ConnectEventListener connectEventListener = new ConnectEventListener() {
+
             @Override
-            public void onSending(byte[] data, byte channel) {
+            public void onSending(byte[] payload, int channel) {
                 /**
                  * onSending is called when a send event begins.
                  * The data argument contains the payload being sent.
                  */
                 String hexData = "null";
-                if (data != null) {
-                    hexData = chirpConnect.payloadToHexString(data);
+                if (payload != null) {
+                    hexData = new String(payload);
                 }
                 //Log.v("connectdemoapp", "ConnectCallback: onSending: " + hexData + " on channel: " + channel);
             }
 
             @Override
-            public void onSent(byte[] data, byte channel) {
+            public void onSent(byte[] data, int channel) {
                 /**
                  * onSent is called when a send event has completed.
                  * The data argument contains the payload that was sent.
                  */
                 String hexData = "null";
                 if (data != null) {
-                    hexData = chirpConnect.payloadToHexString(data);
+                    hexData = new String(data);
                 }
                 Bridge.SendSentEventToUnity(hexData);
                 //Log.v("connectdemoapp", "ConnectCallback: onSent: " + hexData + " on channel: " + channel);
             }
 
             @Override
-            public void onReceiving(byte channel) {
+            public void onReceiving(int channel) {
                 /**
                  * onReceiving is called when a receive event begins.
                  * No data has yet been received.
@@ -62,7 +63,7 @@ public class ChirpConnector {
             }
 
             @Override
-            public void onReceived(byte[] data, byte channel) {
+            public void onReceived(byte[] data, int channel) {
                 /**
                  * onReceived is called when a receive event has completed.
                  * If the payload was decoded successfully, it is passed in data.
@@ -70,19 +71,17 @@ public class ChirpConnector {
                  */
                 String hexData = "null";
                 if (data != null) {
-                    hexData = chirpConnect.payloadToHexString(data);
+                    hexData = new String(data);
                 }
                 Bridge.SendReceiveEventToUnity(hexData);
                 //Log.v("connectdemoapp", "ConnectCallback: onReceived: " + hexData + " on channel: " + channel);
             }
 
             @Override
-            public void onStateChanged(byte oldState, byte newState) {
+            public void onStateChanged(int oldState, int newState) {
                 /**
                  * onStateChanged is called when the SDK changes state.
                  */
-                ConnectState state = ConnectState.createConnectState(newState);
-                //Log.v("connectdemoapp", "ConnectCallback: onStateChanged " + oldState + " -> " + newState);
                 Bridge.SendChangeStateEventToUnity(newState);
             }
 
@@ -91,24 +90,17 @@ public class ChirpConnector {
                 /**
                  * onSystemVolumeChanged is called when the system volume is changed.
                  */
-                //Log.v("connectdemoapp", "System volume has been changed, notify user to increase the volume when sending data");
             }
 
         };
 
         this.chirpConnect = new ChirpConnect(Ctx, key, secret);
-        this.chirpConnect.setConfig(config, new ConnectSetConfigListener() {
-            @Override
-            public void onSuccess() {
-                //Set-up the connect callbacks
-                chirpConnect.setListener(connectEventListener);
-            }
-
-            @Override
-            public void onError(ChirpError setConfigError) {
-                Log.e("setConfigError", setConfigError.getMessage());
-            }
-        });
+        ChirpError error = this.chirpConnect.setConfig(config);
+        if (error.getCode() == 0) {
+            chirpConnect.setListener(connectEventListener);
+        } else {
+            Log.e("ChirpError: ", error.getMessage());
+        }
     }
 
     public int StartSDK() {
@@ -143,7 +135,7 @@ public class ChirpConnector {
          */
         byte[] payload = message.getBytes();
 
-        long maxSize = chirpConnect.getMaxPayloadLength();
+        long maxSize = chirpConnect.maxPayloadLength();
         if (maxSize < payload.length) {
             return 83;
         }

@@ -3,7 +3,7 @@ package com.alexanderkub.plugins.unitychirpio;
 import android.content.Context;
 import android.os.Handler;
 
-import io.chirp.connect.models.ConnectState;
+import io.chirp.connect.models.ChirpConnectState;
 
 public final class Bridge {
     private static ChirpPluginJavaMessageHandler javaMessageHandler;
@@ -62,8 +62,8 @@ public final class Bridge {
         });
     }
 
-    protected static void SendChangeStateEventToUnity(byte state) {
-        final byte tmpState = state;
+    protected static void SendChangeStateEventToUnity(int state) {
+        final int tmpState = state;
         runOnUnityThread(new Runnable() {
             @Override
             public void run() {

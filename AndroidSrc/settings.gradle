@@ -1,1 +1,1 @@
-include ':app', ':unitychirpio', ':chirp-connect-release'
+include ':app', ':unitychirpio', ':chirpsdk-release'

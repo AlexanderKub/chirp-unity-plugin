@@ -13,6 +13,7 @@
 bin/
 gen/
 out/
+*.DS_Store
 
 # Gradle files
 .gradle/
@@ -67,4 +68,4 @@ fastlane/test_output
 fastlane/readme.md
 
 #aar
-chirp-connect-release.aar
+chirpsdk-release.aar

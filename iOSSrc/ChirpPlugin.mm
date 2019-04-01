@@ -78,14 +78,14 @@ NSError *NotCreatedError = [NSError errorWithDomain:@"io.chirp.plugin.error" cod
     [self.connect setAuthenticatedBlock:^(NSError * _Nullable error) {
     }];
     
-    [self.connect setSendingBlock:^(NSData * _Nonnull data) {
+    [self.connect setSendingBlock:^(NSData * _Nonnull data, NSUInteger channel) {
         /*------------------------------------------------------------------------------
          * sendingBlock is called when a send event begins.
          * The data argument contains the payload being sent.
          *----------------------------------------------------------------------------*/
     }];
     
-    [self.connect setSentBlock:^(NSData * _Nonnull data) {
+    [self.connect setSentBlock:^(NSData * _Nonnull data, NSUInteger channel) {
         /*------------------------------------------------------------------------------
          * sentBlock is called when a send event has completed.
          * The data argument contains the payload that was sent.
