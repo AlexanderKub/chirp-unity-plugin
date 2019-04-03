@@ -80,6 +80,6 @@ Send [Hello world!](https://audio.chirp.io/v3/standard/48656c6c6f20776f726c6421.
 
 Plugin source code for iOS it's just Objective-C++ files in Plugins folder, you don't need to build it.
 
-Plugin source code for Android it's Gradle project.For a correct build you must place `chirpsdk-release.sdk` to `unitychirpio/libs` and build `unitychirpio` module by Gradle.
+Plugin source code for Android it's Gradle project.For a correct build you must place `chirpsdk-release.aar` to `unitychirpio/libs` and build `unitychirpio` module by Gradle.
 
 ----
