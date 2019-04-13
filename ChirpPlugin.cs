@@ -15,9 +15,6 @@ public enum ChirpErrorsEnum {
     CHIRP_CONNECT_OK = 0,
     CHIRP_CONNECT_OUT_OF_MEMORY,
     CHIRP_CONNECT_NOT_INITIALISED,
-
-    CHIRP_CONNECT_NOT_STARTED = 10,
-    CHIRP_CONNECT_NOT_STOPPED,
     CHIRP_CONNECT_NOT_RUNNING,
     CHIRP_CONNECT_ALREADY_RUNNING,
     CHIRP_CONNECT_ALREADY_STOPPED,
@@ -25,7 +22,6 @@ public enum ChirpErrorsEnum {
     CHIRP_CONNECT_INVALID_SAMPLE_RATE = 20,
     CHIRP_CONNECT_NULL_BUFFER,
     CHIRP_CONNECT_NULL_POINTER,
-    CHIRP_CONNECT_INVALID_LENGTH,
     CHIRP_CONNECT_INVALID_CHANNEL,
     CHIRP_CONNECT_INVALID_FREQUENCY_CORRECTION,
 
@@ -39,32 +35,26 @@ public enum ChirpErrorsEnum {
     CHIRP_CONNECT_EXPIRED_CONFIG,
     CHIRP_CONNECT_INVALID_VERSION,
     CHIRP_CONNECT_INVALID_PROJECT,
-    /*--------------------------------------------------------------------------
-     * CHIRP_CONNECT_INVALID_CONFIG_CHARACTER needs to be kept at the end of
-     * the credentials error code list as it deals with base64 but it is
-     * implemented in chirp-connect.
-     *------------------------------------------------------------------------*/
     CHIRP_CONNECT_INVALID_CONFIG_CHARACTER,
 
     CHIRP_CONNECT_PAYLOAD_EMPTY_MESSAGE = 80,
-    CHIRP_CONNECT_PAYLOAD_NO_ALPHABET,
     CHIRP_CONNECT_PAYLOAD_INVALID_MESSAGE,
-    CHIRP_CONNECT_PAYLOAD_INVALID_MESSAGE_LENGTH,
-    CHIRP_CONNECT_PAYLOAD_INVALID_ENCODED_LENGTH,
     CHIRP_CONNECT_PAYLOAD_UNKNOWN_SYMBOLS,
     CHIRP_CONNECT_PAYLOAD_DECODE_FAILED,
     CHIRP_CONNECT_PAYLOAD_TOO_LONG,
+    CHIRP_CONNECT_PAYLOAD_TOO_SHORT,
 
     CHIRP_CONNECT_INVALID_VOLUME = 99,
     CHIRP_CONNECT_UNKNOWN_ERROR = 100,
 
-    CHIRP_CONNECT_NETWORK_ERROR = 105,
+    CHIRP_CONNECT_NETWORK_ERROR = 200,
     CHIRP_CONNECT_NETWORK_NO_NETWORK,
     CHIRP_CONNECT_NETWORK_PERMISSIONS_NOT_GRANTED,
-
-    CHIRP_CONNECT_ACCOUNT_DISABLED = 110,
-
-    CHIRP_CONNECT_AUDIO_IO = 120,
+    CHIRP_CONNECT_ACCOUNT_DISABLED,
+    CHIRP_CONNECT_AUDIO_IO,
+    CHIRP_CONNECT_SEND_MODE_DISABLED,
+    CHIRP_CONNECT_RECIEVE_MODE_DISABLED,
+    CHIRP_CONNECT_DEVICE_MUTED,
 
     CHIRP_PLUGIN_NOT_INIT = 404,
 }
@@ -98,12 +88,14 @@ public class ChirpPlugin : MonoBehaviour {
     public class ChirpPluginJavaMessageHandler : AndroidJavaProxy {
         public ChirpPluginJavaMessageHandler() : base("com.alexanderkub.plugins.unitychirpio.ChirpPluginJavaMessageHandler") { }
 
-        public void OnChangeStateHandler(ChirpStateEnum state) {
-            ChirpPlugin.OnChangeState(state);
+        public void OnChangeStateHandler(int state) {
+            if (Enum.IsDefined(typeof(ChirpStateEnum), state)) {
+                ChirpPlugin.OnChangeState((ChirpStateEnum)state);
+            }
         }
 
         public void OnReceiveDataHandler(string data) {
-            ChirpPlugin.OnReceiveData(HexStringToString(data));
+            ChirpPlugin.OnReceiveData(data);
         }
 
         public void OnSentDataHandler(string data) {
@@ -195,9 +187,7 @@ public class ChirpPlugin : MonoBehaviour {
 
     [AOT.MonoPInvokeCallback(typeof(MonoPStateChangeDelegate))]
     private static void OnChangeState(ChirpStateEnum state) {
-        if (OnChangeStateDataEvent != null) {
-            OnChangeStateDataEvent(ChirpState, state);
-        }
+        OnChangeStateDataEvent?.Invoke(ChirpState, state);
         ChirpState = state;
     }
 
