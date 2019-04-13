@@ -1,24 +1,29 @@
 package com.alexanderkub.plugins.unitychirpio;
 
+import android.Manifest;
+import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.util.Log;
+import android.support.annotation.NonNull;
 
 
 import io.chirp.connect.ChirpConnect;
 import io.chirp.connect.interfaces.ConnectEventListener;
-import io.chirp.connect.interfaces.ConnectSetConfigListener;
 import io.chirp.connect.models.ChirpError;
-import io.chirp.connect.models.ChirpConnectState;
 
-public class ChirpConnector {
+class ChirpConnector {
     private ChirpConnect chirpConnect;
     private Context Ctx;
+    private Activity Act;
 
-    public ChirpConnector(final Context ctx) {
+    ChirpConnector(final Context ctx, final Activity act) {
         this.Ctx = ctx;
+        this.Act = act;
     }
 
-    protected void InitSDK(String key, String secret, String config) {
+    void InitSDK(String key, String secret, String config) {
         if (this.chirpConnect != null) {
             this.chirpConnect.close();
             this.chirpConnect = null;
@@ -27,44 +32,34 @@ public class ChirpConnector {
         final ConnectEventListener connectEventListener = new ConnectEventListener() {
 
             @Override
-            public void onSending(byte[] payload, int channel) {
-                /**
-                 * onSending is called when a send event begins.
-                 * The data argument contains the payload being sent.
-                 */
-                String hexData = "null";
-                if (payload != null) {
-                    hexData = new String(payload);
-                }
-                //Log.v("connectdemoapp", "ConnectCallback: onSending: " + hexData + " on channel: " + channel);
+            public void onSending(@NonNull byte[] payload, int channel) {
+                //String hexData = new String(payload);
+                //Log.v("connectDemoApp", "ConnectCallback: onSending: " + hexData + " on channel: " + channel);
             }
 
             @Override
-            public void onSent(byte[] data, int channel) {
-                /**
+            public void onSent(@NonNull byte[] data, int channel) {
+                /*
                  * onSent is called when a send event has completed.
                  * The data argument contains the payload that was sent.
                  */
-                String hexData = "null";
-                if (data != null) {
-                    hexData = new String(data);
-                }
+                String hexData = new String(data);
                 Bridge.SendSentEventToUnity(hexData);
-                //Log.v("connectdemoapp", "ConnectCallback: onSent: " + hexData + " on channel: " + channel);
+                //Log.v("connectDemoApp", "ConnectCallback: onSent: " + hexData + " on channel: " + channel);
             }
 
             @Override
             public void onReceiving(int channel) {
-                /**
+                /*
                  * onReceiving is called when a receive event begins.
                  * No data has yet been received.
                  */
-                //Log.v("connectdemoapp", "ConnectCallback: onReceiving on channel: " + channel);
+                //Log.v("connectDemoApp", "ConnectCallback: onReceiving on channel: " + channel);
             }
 
             @Override
             public void onReceived(byte[] data, int channel) {
-                /**
+                /*
                  * onReceived is called when a receive event has completed.
                  * If the payload was decoded successfully, it is passed in data.
                  * Otherwise, data is null.
@@ -74,12 +69,12 @@ public class ChirpConnector {
                     hexData = new String(data);
                 }
                 Bridge.SendReceiveEventToUnity(hexData);
-                //Log.v("connectdemoapp", "ConnectCallback: onReceived: " + hexData + " on channel: " + channel);
+                //Log.v("connectDemoApp", "ConnectCallback: onReceived: " + hexData + " on channel: " + channel);
             }
 
             @Override
             public void onStateChanged(int oldState, int newState) {
-                /**
+                /*
                  * onStateChanged is called when the SDK changes state.
                  */
                 Bridge.SendChangeStateEventToUnity(newState);
@@ -87,7 +82,7 @@ public class ChirpConnector {
 
             @Override
             public void onSystemVolumeChanged(int oldVolume, int newVolume) {
-                /**
+                /*
                  * onSystemVolumeChanged is called when the system volume is changed.
                  */
             }
@@ -101,9 +96,20 @@ public class ChirpConnector {
         } else {
             Log.e("ChirpError: ", error.getMessage());
         }
+        GrantPermissions();
     }
 
-    public int StartSDK() {
+    @TargetApi(23)
+    private static final int RESULT_REQUEST_RECORD_AUDIO = 1095;
+
+    @TargetApi(23)
+    private void GrantPermissions() {
+        if (Ctx.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            Act.requestPermissions(new String[] {Manifest.permission.RECORD_AUDIO}, RESULT_REQUEST_RECORD_AUDIO);
+        }
+    }
+
+    int StartSDK() {
         if (this.chirpConnect == null) {
             return 404;
         }
@@ -115,7 +121,7 @@ public class ChirpConnector {
         return 0;
     }
 
-    public int StopSDK() {
+    int StopSDK() {
         if (this.chirpConnect == null) {
             return 404;
         }
@@ -128,8 +134,8 @@ public class ChirpConnector {
     }
 
 
-    protected int sendPayload(int length, String message) {
-        /**
+    int sendPayload(String message) {
+        /*
          * A payload is a byte array dynamic size with a maximum size defined by the config string.
          *
          */
@@ -137,7 +143,7 @@ public class ChirpConnector {
 
         long maxSize = chirpConnect.maxPayloadLength();
         if (maxSize < payload.length) {
-            return 83;
+            return 84;
         }
         ChirpError error = chirpConnect.send(payload);
         int errorCode = error.getCode();
